@@ -1,0 +1,104 @@
+vk::Instance
+    std::vector<vk::PhysicalDevice> enumratePhysicalDevices()
+    　→ 物理デバイスの一覧を返す。
+
+vk::PhysicalDevice
+    vk::Device createDeviceUnique(vk::DeviceCreateInfo)
+    　→ 物理デバイスから論理デバイスを作成する。
+
+    std::vector<...> getQueueFamilyProperties()
+    　→ ある物理デバイスの各キューファミリの情報を返す。
+
+vk::Device
+    vk::CommandPool createCommandPool()
+    　→ コマンドプールを作成する。
+
+    vector<vk::CommandBuffer> allocateCommandBuffers()
+    　→ コマンドバッファを作成する。
+
+    vk::Fence createFence(vk::FenceCreateInfo)
+    　→ フェンスオブジェクトを作成する。
+
+    vk::Semaphore createSemaphore(vk::SemaphoreCreateInfo)
+    　→ セマフォオブジェクトを作成する。
+
+    vk::Result waitForFences(vk::Device, vk::Bool32 waitAll, uint64_t timeout)
+    　→ シグナル状態になるまで待機する。
+    　　正常に終了すればvk::Result::eSuccess,timeoutを超えても処理が終わらなかった場合はvk::Result::eTimeoutを返す。
+    　　waitAll = 待機方法。VK_TRUEは全てのフェンスが、VK_FALSEはどれか一つのフェンスがシグナル状態になるまで待機。
+    　　timeout = 最大待機時間。ナノ秒で指定する。
+
+    vk::Result resetFences(vk::Device)
+    　→ 非シグナル状態にリセットする。
+
+vk::DeviceCreateInfo
+    vk::DeviceQueueCreateInfo pQueueCreateInfos
+    　→ デバイスに対するキューの情報を持つ構造体の先頭アドレスを格納する。
+
+    QueueCreateInfoCount
+    　→ 配列の要素数を指定する。
+
+vk::Queue
+    submit({ vk::SubmitInfo }, vk::Fence?)
+    　→ GPUに命令を送信する。
+
+    waitIdle()
+    　→ キューが空になるまで待機する。
+
+vk::QueueFamilyProperties
+    queueFlags
+    　→ キューが行える処理をビットで表す。
+
+vk::QueueFlagBits
+    eGraphics
+    　→ 描画が可能であることを表す。
+
+    eCompute
+    　→ 計算が可能であることを表す。
+
+    eTransfer
+    　→ データ移動が可能であることを表す。
+
+vk::DeviceQueueCreateInfo
+    queueFamilyIndex
+    　→ キューの欲しいキューファミリのインデックスを表す。
+
+    queueCount
+    　→ そのキューファミリからいくつのキューが欲しいかを表す。
+
+    pQueuePriorities
+    　→ キューのタスク実行の優先度を表すfloat値配列を指定する。
+
+vk::CommandPoolCreateInfo
+    uint32_t queueFamilyIndex
+    　→ コマンドバッファを送信する時に対象とするキューを指定する。
+
+vk::CommandBufferAllocateInfo
+    vk::CommandPool commandPool
+    　→ コマンドプールを指定する。
+
+    uint32_t commandBufferCount
+    　→ 作るコマンドバッファの数を指定する。
+
+vk::SubmitInfo = コマンドバッファの送信に関わる情報を指定する。
+    commandBufferCount
+    　→ 送信するコマンドバッファの数を指定する。
+
+    pCommandBuffers
+    　→ 送信するコマンドバッファの配列へのポインタを指定する。
+
+    signalSemaphoreCount
+    　→ コマンド完了時にシグナル状態にするセマフォの数。
+
+    pSignalSemaphores
+    　→ コマンド完了時にシグナル状態にするセマフォの配列アドレス。
+
+    waitSemaphoreCount
+    　→ コマンド完了まで待機するセマフォの数？
+
+    pWaitSemaphores
+    　→ コマンド完了まで待機するセマフォの配列アドレス？
+
+vk::FenceCreateInfo
+    flags
+    　→ 状態を設定する。vk::FenceCreateFlagBits::eSignaledを設定すると、初期状態がシグナル状態となる。
