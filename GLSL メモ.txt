@@ -1,0 +1,11 @@
+GLSL メモ
+
+・gl_posotionという変数に代入することで座標を出力できる。
+
+・以下コマンドを使用して、SPIR-Vにコンパイルする。
+
+glslc shader.vert -o shader.vert.spv
+
+　-oオプションは出力ファイル名の指定。
+
+・
