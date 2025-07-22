@@ -8,6 +8,9 @@ vk::PhysicalDevice
 
     std::vector<...> getQueueFamilyProperties()
     　→ ある物理デバイスの各キューファミリの情報を返す。
+	
+	getMemoryProperties()
+	　→ デバイスメモリの種類を取得する。
 
 vk::Device
     vk::CommandPool createCommandPool()
@@ -30,6 +33,18 @@ vk::Device
 
     vk::Result resetFences(vk::Device)
     　→ 非シグナル状態にリセットする。
+	
+	allocateMemory()
+	　→ デバイスメモリを確保する。
+	
+	vk::MemoryRequirements getImageMemoryRequirements(vk::Image)
+	　→ イメージに対してどんな種類のメモリがどれだけ必要かの情報を取得する。
+	
+	bindImageMemory(vk::Image, vk::DeviceMemory, vk::DeviceSize memoryOffset)
+	　→ イメージにメモリをバインドする。第三引数には「確保したメモリの先頭から何バイト目を使用するか」を指定する。
+
+	createRenderPass()
+	　→ レンダーパスを作成する。
 
 vk::DeviceCreateInfo
     vk::DeviceQueueCreateInfo pQueueCreateInfos
@@ -102,3 +117,47 @@ vk::SubmitInfo = コマンドバッファの送信に関わる情報を指定す
 vk::FenceCreateInfo
     flags
     　→ 状態を設定する。vk::FenceCreateFlagBits::eSignaledを設定すると、初期状態がシグナル状態となる。
+
+vk::Image
+	imageType
+	　→ 次元を指定する。
+	
+	extent
+	　→ サイズを指定する。
+	
+	mipLevels
+	
+	arrayLayers
+	
+	format
+	　→ 画素のフォーマットの種類(どのように各ピクセルが色を保存しているかの情報)を指定する。
+	
+	tiling
+	
+	initialLayout
+	
+	usage
+	
+	sharingMode
+	
+	samples
+	
+vk::PhysicalDeviceMemoryProperties
+
+vk::MemoryRequirements
+	size
+	　→ 必要なメモリサイズ。
+	
+	memoryTypeBits
+	　→ 使用可能なメモリの種類。
+	
+vk::MemoryAllocateInfo
+
+vk::AttachmentReference
+	attachment
+	　→ 何番目のアタッチメントなのかを指定する。
+	
+vk::PipelineShaderStageCreateInfo
+	pName
+	　→ 開始する関数名を指定する。
+	
