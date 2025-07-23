@@ -45,6 +45,13 @@ vk::Device
 
 	createRenderPass()
 	　→ レンダーパスを作成する。
+	
+	createFramebuffer()
+	　→ フレームバッファを作成する。
+	
+	mapMemory(vk::ImageMemory, vk::DeviceSize offset, vk::DeviceSize size)
+	　→ アプリケーション側のアドレス空間上にマップする。
+	　　offsetはデバイスメモリのマップしたい場所のオフセット、sizeはマップするサイズを指定する。
 
 vk::DeviceCreateInfo
     vk::DeviceQueueCreateInfo pQueueCreateInfos
@@ -94,6 +101,26 @@ vk::CommandBufferAllocateInfo
 
     uint32_t commandBufferCount
     　→ 作るコマンドバッファの数を指定する。
+	
+vk::CommandBuffer
+	begin(vk::CommandBufferBeginInfo)
+	　→ コマンド記録を開始する。
+	
+	end()
+	　→ コマンド記録を終了する。
+	
+	beginRenderPass(vk::RenderPassBeginInfo, vk::SubpassContents)
+	　→ レンダーパスの開始を行うコマンドを記録する。
+	
+	endRenderPass()
+	　→ レンダーパスの終了を行うコマンドを記録する。
+	
+	draw(uint32_t vertexCnt, uint32_t instanceCnt, uint32_t firstVertex, uint32_t firstInstance)
+	　→ 描画を行う。vertexCntは頂点の数、instanceCntはインスタンスの数、
+	　　firstVertex,firstInstanceにはそれぞれ頂点とインスタンスのオフセットを指定する。
+	　　例えば頂点の情報が2000個分あり、前の1000頂点が物体Aのモデルデータを表し、
+	　　残る1000頂点が物体Bのモデルデータを表すといった場合、
+	　　firstVertexには1000を渡して、物体Bのモデル描画に使える、といった感じのもの。
 
 vk::SubmitInfo = コマンドバッファの送信に関わる情報を指定する。
     commandBufferCount
@@ -161,3 +188,18 @@ vk::PipelineShaderStageCreateInfo
 	pName
 	　→ 開始する関数名を指定する。
 	
+vk::ImageViewCreateInfo
+	image
+	　→ イメージビューが指すイメージを指定する。
+	
+	viewType
+	　→ 次元を指定する。
+	
+	format
+	　→ フォーマットを指定する。
+	
+	viewType
+	
+	components
+	
+	subresourceRange
