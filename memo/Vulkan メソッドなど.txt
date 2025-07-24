@@ -11,6 +11,18 @@ vk::PhysicalDevice
 	
 	getMemoryProperties()
 	　→ デバイスメモリの種類を取得する。
+	
+	vk::SurfaceCapabilitiesKHR getSurfaceCapabilitiesKHR(vk::SurfaceKHR)
+	　→ 物理デバイスが対象のサーフェイスを扱う能力の情報を取得する。
+	
+	vector<vk::SurfaceFormatKHR> getSurfaceFormatsKHR(vk:SurfaceKHR)
+	　→ サーフェイスの画像フォーマットを取得する。
+	
+	vector<vk::PresentModeKHR> getSurfacePresentModesKHR(vk::SurfaceKHR)
+	　→ サーフェイスの表示処理のモードを取得する。
+	
+	uint32_t getSurfaceSupportKHR(uint32_t queueFamilyIndex, vk::Surface)
+	　→ ある物理デバイスのあるキューが、あるサーフェイスへのプレゼンテーションを行えるかどうかを取得する。
 
 vk::Device
     vk::CommandPool createCommandPool()
@@ -52,6 +64,10 @@ vk::Device
 	mapMemory(vk::ImageMemory, vk::DeviceSize offset, vk::DeviceSize size)
 	　→ アプリケーション側のアドレス空間上にマップする。
 	　　offsetはデバイスメモリのマップしたい場所のオフセット、sizeはマップするサイズを指定する。
+	
+	vk::ResultValue acquireNextImageKHR(vk::SwapchainKHR, uint64_t timeout, vk::Semaphore, vk::Fence)
+	　→ 次に描画を行うべきイメージの取得、
+	　　描画された後に表示されても良いように準備する処理を行う。
 
 vk::DeviceCreateInfo
     vk::DeviceQueueCreateInfo pQueueCreateInfos
@@ -203,3 +219,33 @@ vk::ImageViewCreateInfo
 	components
 	
 	subresourceRange
+	
+vk::SwapchainCreateInfoKHR
+	surface
+	　→ 画像の表示先となるサーフェイスを指定する。
+	
+	minImageCount
+	　→ スワップチェーンが扱うイメージの数。
+	　　メモの方で「描いている途中」が見えないようにするため、2枚以上のキャンバスを用意して...
+	　　といった記述をしたが、そのキャンバスの数。getSurfaceCapabilitiesKHRで得られる
+	　　minImageCount～maxImageCountの間の数なら何枚でも問題ないが、
+	　　最小値 + 1 を指定するとよい？
+	
+	imageFormat, imageColorSpace
+	　→ スワップチェーンの画像フォーマットを表す。
+	　　必ずgetSurfaceFormatsKHRが返した配列に含まれる組み合わせでなければならない。
+	
+	imageExtent
+	　→ スワップチェーンの画像サイズを表す。getSurfaceCapabilitiesKHRで得られる
+	　　minImageExtent～maImageExtentの間でなければならない。
+	
+	preTransform
+	　→ 表示時の画面反転、画面回転などのオプションを表す。
+	　　getSurfaceCapabilitiesKHRの戻り値に依存し、
+	　　supportedTransformsでサポートされている中に含まれるものでなければならない。
+	　　currentTransformを設定すると現在の画面設定が反映されるため無難である。
+	
+	presentMode
+	　→ 表示処理のモードを示す。
+	　　getSurfacePresentModesKHRの戻り値の配列に含まれる値でないといけない。
+	
