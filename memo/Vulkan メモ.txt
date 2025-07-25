@@ -517,9 +517,26 @@ https://github.com/bwasty/vulkan-tutorial-hpp/blob/master/steps/18_vertex_buffer
 
 公式チュートリアルのC++コードを写経していく形が良いかもしれない。
 https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/00_Base_code.html
+
+・以下コードのように、{}を用いてメンバを初期化するような書き方はC++20から可能。
+
+constexpr vk::ApplicationInfo appInfo{ .pApplicationName   = "Hello Triangle",
+            .applicationVersion = VK_MAKE_VERSION( 1, 0, 0 ),
+            .pEngineName        = "No Engine",
+            .engineVersion      = VK_MAKE_VERSION( 1, 0, 0 ),
+            .apiVersion         = vk::ApiVersion14 };
+			
+　これは、指示付き初期化と呼ばれるもので{}による集成体初期化において
+　メンバ名を指定して初期化が行える。
+			
+・公式チュートリアルなんかAPIとバージョンが変なことになってエラーで動かないので、
+　公式じゃない方のチュートリアルでやっていく形にする。
+https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Base_code
+
 ・
 
-　から
+createInstance()の
+VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};　から
 
 ======================================================================
 
