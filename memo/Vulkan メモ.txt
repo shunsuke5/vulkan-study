@@ -533,10 +533,54 @@ constexpr vk::ApplicationInfo appInfo{ .pApplicationName   = "Hello Triangle",
 　公式じゃない方のチュートリアルでやっていく形にする。
 https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Base_code
 
+・vulkan api関数宣言の戻り値の型の前にはVKAPI_ATTR,
+　型の後にはVKAPI_CALL を記述する。例としては以下の通り。
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(...)
+
+　こうすることで、debugCallback()に正しい引数などを指定できているか確認してくれる。
+　上記の例では、デバッグコールバック関数を定義している。
+
+・コールバックは、検証レイヤーのメッセージをトリガーしたvulkan呼び出しを中止するかどうかを
+　示すbool値を返す。コールバックがtrueを返した場合、呼び出しは
+　VK_ERROR_VALIDATION_FAILED_EXTエラーと共に中止される。
+　これは通常、検証レイヤー自体のテストにのみ使用されるため、常にVK_FALSEを返す必要がある。
+
+・vulkan apiはドライバのオーバーヘッドを最小限に抑えるという理念に基づいて設計されており、
+　その目標の現れの一つとして、APIのデフォルトのエラーチェックは非常に限定的である。
+　列挙型に誤った値を設定したり、必須パラメータにNULLポインタを渡したりするといった
+　単純なミスでさえ、通常は明示的に処理されず、クラッシュや未定義の動作につながるだけである。
+
+・バリデーションレイヤーはデフォルトでデバッグメッセージを標準出力に出力するが、
+　プログラム内で明示的なコールバック関数を用意することで、これらのメッセージを
+　処理することもできる。これにより、必ずしもすべてのメッセージが致命的なエラーであるとは
+　限らないため、表示するメッセージの種類を選択できるようになる。	
+
+　プログラム内でメッセージと関連する詳細を処理するためのコールバックを設定するには、
+　VK_EXT_debug_utils拡張機能を使用してコールバック付きのデバッグメッセンジャーを
+　設定する必要がある。このVK_EXT_debug_utilsを表す定数として
+　VK_EXT_DEBUG_UTILS_EXTENSION_NAME が用意されている。
+
+・vkCreateDebugUtilsMessengerEXT()メソッドは拡張関数であるため自動的には読み込まれない。
+　vkGetInstanceProcAddr()を使用してアドレスを自分で調べる必要がある。
+
+・vkDebugUtilsMessengerEXTもクリーンアップする必要があるため、
+　vkDestroyDebugUtilsMessengerEXT()もvkGetInstanceProcAddr()で
+　明示的に取得して、クリーンアップ処理内で実行する必要がある。
+
+・vkCreateDebugUtilsMessengerEXTの呼び出しには有効なインスタンスが作成されている必要があり、
+　インスタンスが破棄される前に呼び出す必要がある。そのため、vkCreateInstance(),
+　vkDestroyInstance()でデバッグをするには、少し処理を加える必要がある。
+
+　これらの関数の呼び出し専用のDebugUtilsMessengerを別途作成する方法がある。
+　これは、vkInstanceCreateInfo構造体のpNextメンバに、
+　vkDebugUtilsMessengerCreateInfoEXT構造体へのポインタを渡すだけでよい。
+　こうすれば、vkCreateInstance(),vkDestroyInstance()でも
+　デバッグメッセンジャーを使用することができる。
+
 ・
 
-createInstance()の
-VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};　から
+　から
 
 ======================================================================
 
