@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstring>
 #include <cstdlib>
+#include <optional>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -58,6 +59,19 @@ void DestroyDebugUtilsMessengerEXT(
     }
 }
 
+/*
+* キューファミリのインデックス
+*/
+struct QueueFamilyIndices
+{
+    std::optional<uint32_t> graphicsFamily;
+
+    bool isComplete()
+    {
+        return graphicsFamily.has_value();
+    }
+};
+
 class HelloTriangleApplication
 {
 public:
@@ -72,8 +86,9 @@ public:
 private:
     GLFWwindow* window;
 
-    VkInstance instance;                        // インスタンス
-    VkDebugUtilsMessengerEXT debugMessenger;    // デバッグメッセンジャー
+    VkInstance instance;                                // インスタンス
+    VkDebugUtilsMessengerEXT debugMessenger;            // デバッグメッセンジャー
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;   // 物理デバイス
 
     /*
     * ウィンドウ初期化処理
@@ -95,6 +110,7 @@ private:
     {
         createInstance();
         setupDebugMessenger();
+        pickPhysicalDevice();
     }
 
     /*
@@ -165,6 +181,71 @@ private:
             throw std::runtime_error("failed to create instance!");
         }
 
+    }
+
+    /*
+    * 物理デバイスの選定
+    */
+    void pickPhysicalDevice()
+    {
+        uint32_t deviceCount = 0;
+        vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+        if (deviceCount == 0) {
+            throw std::runtime_error("failed to find GPUs with Vulkan support!");
+        }
+
+        std::vector<VkPhysicalDevice> devices(deviceCount);
+        vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+        for (const auto& device : devices) {
+            if (isDeviceSuitable(device)) {
+                physicalDevice = device;
+                break;
+            }
+        }
+
+        if (physicalDevice == VK_NULL_HANDLE) {
+            throw std::runtime_error("failed to find a suitable GPU!");
+        }
+    }
+
+    /*
+    * 想定しているキューファミリが取得できているか判定
+    */
+    bool isDeviceSuitable(VkPhysicalDevice device)
+    {
+        QueueFamilyIndices indices = findQueueFamilies(device);
+        return indices.isComplete();
+    }
+
+    /*
+    * 必要なキューファミリを検索
+    */
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
+    {
+        QueueFamilyIndices indices;
+
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+        int i = 0;
+        for (const auto& queueFamily : queueFamilies) {
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+                indices.graphicsFamily = i;
+            }
+
+            if (indices.isComplete()) {
+                break;
+            }
+
+            ++i;
+        }
+
+        return indices;
     }
 
     /*

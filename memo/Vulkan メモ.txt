@@ -578,6 +578,9 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(...)
 　こうすれば、vkCreateInstance(),vkDestroyInstance()でも
 　デバッグメッセンジャーを使用することができる。
 
+・vkPhysicalDeviceはvkInstanceが破棄される際に暗黙的に破棄されるため、
+　cleanup()に新たな処理を追加する必要はない。
+
 ・
 
 　から
