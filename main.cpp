@@ -83,13 +83,13 @@ struct QueueFamilyIndices
 };
 
 /*
-* スワップチェーンのプロパティ
+* スワップチェーンに必要な情報
 */
 struct SwapChainSupportDetails
 {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
+    VkSurfaceCapabilitiesKHR capabilities;              // 基本的なサーフェイス機能
+    std::vector<VkSurfaceFormatKHR> formats;            // サーフェイス形式
+    std::vector<VkPresentModeKHR> presentModes;         // プレゼンテーションモード
 };
 
 class HelloTriangleApplication
@@ -285,7 +285,8 @@ private:
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
         createInfo.queueCreateInfoCount = 1;
         createInfo.pEnabledFeatures = &deviceFeatures;
-        createInfo.enabledExtensionCount = 0;
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
         if (enableValidationLayers) {
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -315,8 +316,8 @@ private:
 
         uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
         if (swapChainSupport.capabilities.maxImageCount > 0 &&
-            imageCount > swapChainSupport.capabilities.maxImageCount)
-        {
+            imageCount > swapChainSupport.capabilities.maxImageCount
+        ) {
             imageCount = swapChainSupport.capabilities.maxImageCount;
         }
 
@@ -364,14 +365,138 @@ private:
     }
 
     /*
-    * 想定しているキューファミリが取得できているか判定
+    * サーフェイスフォーマットの選定
+    */
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+        for (const auto& availableFormat : availableFormats) {
+            if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
+                availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
+            ) {
+                return availableFormat;
+            }
+
+        }
+
+        return availableFormats[0];
+    }
+
+    /*
+    * プレゼンテーションモードの選定
+    */
+    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
+        for (const auto& availablePresentMode : availablePresentModes) {
+            if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+                return availablePresentMode;
+            }
+        }
+
+        // VK_PRESENT_MODE_FIFO_KHR は唯一必ず使えるモードのため、
+        // デフォルトとして戻り値に指定している
+        return VK_PRESENT_MODE_FIFO_KHR;
+    }
+
+    /*
+    * スワップ範囲の設定
+    */
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
+        if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+            return capabilities.currentExtent;
+        } else {
+            // currentExtent の値がuint32_tの上限に設定されている場合、
+            // minImageExtent～maxImageExtentの間で、
+            // 正しい単位(ピクセル単位)で明示的に解像度を指定しなければならない？
+            int width, height;
+            // ピクセル単位を取得
+            glfwGetFramebufferSize(window, &width, &height);
+
+            VkExtent2D actualExtent = {
+                static_cast<uint32_t>(width),
+                static_cast<uint32_t>(height)
+            };
+
+            // 取得したピクセル値を範囲内に収める
+            actualExtent.width = std::clamp(
+                actualExtent.width,
+                capabilities.minImageExtent.width,
+                capabilities.maxImageExtent.width
+            );
+            actualExtent.height = std::clamp(
+                actualExtent.height,
+                capabilities.minImageExtent.height,
+                capabilities.maxImageExtent.height
+            );
+
+            return actualExtent;
+        }
+    }
+
+    /*
+    * 物理デバイスがスワップチェーンをサポートしているか判定
+    */
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) {
+        SwapChainSupportDetails details;
+
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+
+        uint32_t formatCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+
+        if (formatCount != 0) {
+            details.formats.resize(formatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+        }
+
+        uint32_t presentModeCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+
+        if (presentModeCount != 0) {
+            details.presentModes.resize(presentModeCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+        }
+
+        return details;
+    }
+
+    /*
+    * 条件に合ったキューファミリが取得できているか判定
     */
     bool isDeviceSuitable(VkPhysicalDevice device)
     {
         QueueFamilyIndices indices = findQueueFamilies(device);
-        return indices.isComplete();
+
+        bool extensionsSupported = checkDeviceExtensionSupport(device);
+
+        bool swapChainAdequate = false;
+        if (extensionsSupported) {
+            SwapChainSupportDetails SwapChainSupport = querySwapChainSupport(device);
+            swapChainAdequate = !SwapChainSupport.formats.empty() &&
+                !SwapChainSupport.presentModes.empty();
+        }
+
+        // 拡張機能が利用可能であることを確認できた時のみ、
+        // スワップチェーンがサポートされているかの確認を行う
+        return indices.isComplete() && extensionsSupported && swapChainAdequate;
     }
 
+    /*
+    * 物理デバイスが拡張機能をサポートしているか判定
+    */
+    bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
+        uint32_t extensionCount;
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+
+        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+        // deviceExtensionsの内容をコピーしてsetを作成
+        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+
+        for (const auto& extension : availableExtensions) {
+            requiredExtensions.erase(extension.extensionName);
+        }
+
+        return requiredExtensions.empty();
+    }
     /*
     * 必要なキューファミリを検索
     */
