@@ -1404,29 +1404,102 @@ VK_SUBOPTIMAL_KHR
 　ウィンドウリサイズコールバック関数内でframebufferResizedメンバに
 　アクセスができているのである。
 
-頂点入力の説明　コーディング　から
+・ここからの数章では、頂点シェーダーにハードコードされた頂点データを
+　メモリ上の頂点バッファに置き換えていく。まずはCPUから見えるバッファを作成し、
+　memcpyを使って直接頂点データをコピーする最も簡単な方法から始め、
+　その後にステージングバッファを使用して頂点データを高性能メモリに
+　コピーする方法を見ていく。
+
+・まず、頂点シェーダーを変更してシェーダーコード自体に頂点データを含めないようにする。
+　頂点シェーダーは、inキーワードを使用して頂点バッファから入力を受け取る。
+
+　inPosition,inColorの変数は頂点属性である。
+　これらは頂点ごとに頂点バッファ内で指定されるプロパティで、
+　以前は2つの配列を使って各頂点に位置と色を手動で指定していたのと同じである。
+　頂点シェーダを再コンパイルするのを忘れないようにする。
+
+　layout(location = x) というアノテーションは入力にインデックスを
+　割り当てており、後でそれを使って参照することができる。
+　ただし注意すべき点として、dvec3(64ビットの3要素ベクトル)のような一部の型は、
+　複数のスロットを使用することがあるため、そういった変数の前後では
+　インデックスを少なくとも2以上離した番号にする必要がある。
+
+・インターリーブとは、データを交互に配置していくことを示す。
+　例えば、3Dモデルの各頂点のXY座標、RGBカラーをインターリーブして配列に詰めると
+　3つの頂点の情報は以下のようにレイアウトされることになる。
+
+XYRGBXYRGBXYRGB...
+
+https://maku.blog/p/wqjqbpi/
+
+・GPUメモリにアップロードされたデータ形式を頂点シェーダーに渡す方法を
+　指定しなければならない。この情報を伝達するために必要な構造体として、
+　VkVertexInputBindingDescription, VkVertexInputAttributeDescription構造体がある。
+
+　頂点バインディングは、頂点全体を通してメモリからデータをロードする速度を記述したり、
+　データエントリ間のバイト数や、各頂点の後または各インスタンスの後に
+　次のデータエントリに移動するかどうかを指定する。
+
+　VkVertexInputBindingDescription構造体について、
+　bindingは、バインディング配列内のインデックスを指定する。
+　strideは、あるエントリから次のエントリまでのバイト数を指定する。
+　inputRateは、以下のいずれかの値を取ることができる。
+
+VK_VERTEX_INPUT_RATE_VERTEX
+　→ 各頂点の後の次のデータエントリに移動する。
+
+VK_VERTEX_INPUT_RATE_INSTANCE
+　→  各インスタンスの後に次のデータエントリに移動する。
+
+　属性記述構造体は、バインディング記述から生成された頂点データの塊から
+　頂点属性を抽出する方法を記述する。今回は位置と色の2つの属性があるため、
+　属性記述構造体も2つ必要である。
+
+　VkVertexInputAttributeDescription構造体について、
+　bindingは、頂点ごとのデータがどのバインディングから取得されるかをvulkanに伝える。
+　locationは、頂点シェーダーの入力で指定されたlocationディレクティブを参照する。
+　formatは、属性のデータ型を表す。フォーマットは色フォーマットと同じ列挙型で指定する。
+　以下のシェーダー型とフォーマットはよく一緒に使われる。
+
+float : VK_FORMAT_R32_SFLOAT
+vec2 : VK_FORMAT_R32G32_SFLOAT
+vec3 : VK_FORMAT_R32G32B32_SFLOAT
+vec4 : VK_FORMAT_R32G32B32A32_SFLOAT
+
+　カラーチャンネルの数がシェーダーデータ型のコンポーネント数と一致するフォーマットを
+　使用する必要がある。シェーダーのコンポーネント数よりも多くのチャンネルを
+　使用することもできるが、その場合は自動的に破棄される。
+　チャンネル数がコンポーネント数よりも少ない場合、BGAコンポーネントは
+　(0,0,1)のデフォルト値を使用する。カラータイプ(SFLOAT,UINT,SINT)と
+　ビット幅もシェーダー入力の型と一致する必要がある。以下の例を参考。
+
+ivec2 : VK_FORMAT_R32G32_SINT(32ビット符号付き整数2成分ベクトル)
+uvec4 : VK_FORMAT_R32G32B32A32_UINT(32ビット符号なし整数4成分ベクトル)
+double : VK_FORMAT_R64_SFLOAT(64ビット倍精度浮動小数点数)
+
+　formatは属性データのバイトサイズを暗黙的に定義し、
+　offsetは頂点ごとのデータ先頭からのバイト数を指定する。
+　バインディングは1回につき1つのVertex構造体を読み込む。
+　メンバであるpos,colorの位置をoffsetofマクロを使って自動的に計算し、指定する。
+
+　VkPipelineVertexInputStateCreateInfo構造体の
+　vertex Binding | Attribute DescriptionCountと、
+　pVertex Binding | Attribute Descriptionsに
+　getBindingDescription(),getAttributeDescriptions()
+　が返す構造体の情報を指定することで、グラフィックスパイプラインへの設定が行える。
+
+・
+
+　から
 
 ======================================================================
 
-・環境構築
+エラーやミス、わからなかったことなど
 
-　WSLでvulkan SDK,vcpkg,CMakeを使用して学習を進める形に変更
-　vulkan SDKとvcpkgはインストール済み
-　なんかvulkanSDKとvcpkgのダウンロード、
-　~/.bashrc, ~/.profileへの環境変数追加の記述、
-　あとは参考サイトの1.4の環境構築と同じファイルを作成、
-　同じ手順でやったらできた。
-　なぜ実家のPCではエラーが起きたのだろうか？
-　違うことと言えば、C:\VulkanSDK\1.4.321.1\Bin を
-　システム環境変数に追加してることぐらいだが。
+・std::array<VkVertexInputAttributeDescription, 2>
+　を関数の戻り値にすると、「不完全型を返します」みたいなエラーや、
+　関数内でstd::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+　のように変数を宣言すると、「不完全型は使用できません」とエラーが出る。
+　　→ 原因は、arrayヘッダをインクルードしていなかったこと。インクルードして解決。
 
-　vcpkgはvs2022に付属していたものを使用、
-　vulkan SDKは公式サイトからダウンロード
-　手順は2つ目のサイトを参考、include,libディレクトリパスの追加と
-　vulkan1-lib のようなファイルの追加はどのライブラリを使用するにしても
-　必要そうな手順なので、覚えておくと良いかもしれない。
-https://docs.vulkan.org/tutorial/latest/02_Development_environment.html
-https://chaosplant.tech/do/vulkan/1-4/
-
-・以下サイトを参考に進めていく
-https://chaosplant.tech/do/vulkan/
+・
