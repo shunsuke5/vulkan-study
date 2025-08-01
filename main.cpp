@@ -136,6 +136,16 @@ struct Vertex
 };
 
 /*
+* デスクリプタ
+*/
+struct UniformBufferObject
+{
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 proj;
+};
+
+/*
 * 頂点属性のインターリーブ
 */
 const std::vector<Vertex> vertices = {
