@@ -1736,6 +1736,35 @@ https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
 https://www.opengl-tutorial.org/jp/beginners-tutorials/tutorial-3-matrices/
 https://matcha-choco010.net/2018/08/30/mvp-matrix/
 
+　3つ目のサイトの内容を手計算で解いて理解してみる。
+
+　y軸中心に45度回転させるとなぜ√2が現れるのかわからなかったが、
+　1つ目のサイトで、sin45°,cos45°がそれぞれ1/√2 になることがわかり、
+　2つ目のサイトで、y軸周りの回転座標変換行列のsinΘ,cosΘの場所に
+　sin45°及びcos45°である1/√2を当てはめて、
+　試しに立方体頂点の(1,1,1)と計算を行うと、
+
+1/√2   0   1/√2       1
+  0    1    0         1
+-1/√2  0   1/√2       1
+
+　上から(2/√2,1,0)となる。2/√2は分母を有理化するために
+　分子と分母それぞれに√2をかけるため、最終的には√2になり、
+　(√2,1,0)となるため、参考サイトと同じ結果になることが確認できた。
+
+https://rollpie.com/pie/1125
+https://rikei-tawamure.com/entry/2019/11/04/184049
+
+　r,OP,cos(π/4)らへんからわからない
+　単位円を理解したらできそうな気がするので単位円を勉強する
+　x=cos,y=sinなのはわかったが、なぜそれに動径であるrをかけてるのかがわからない。
+https://w3e.kanazawa-it.ac.jp/math/category/sankakukansuu/sankakuhi/henkan-tex.cgi?size=6&target=/math//category/sankakukansuu/sankakuhi/nagasa-to-sannkakuhi.html
+　三角形 辺の長さ 三角関数　で検索して出てきた上記サイトの最初のところで、
+　AC = c * cosΘ となっている。これでは？
+　わかった。cosΘ = 底辺/斜辺　だから、これを底辺 = の形にしたいなら
+　両辺に斜辺をかけなければならない。そうすると底辺 = cosΘ * 斜辺 になる。
+　だから、動径(斜辺)のrとcosΘをかけたらxが求められる。
+
 ・
 
 実際に行列の計算とかを手でしたり、GLMのモデル、ビュー、射影のメソッドを理解するところ　から
